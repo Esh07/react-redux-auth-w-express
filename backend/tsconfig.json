@@ -9,17 +9,20 @@
     "types": [
       "node"
     ], // Include type definitions for Node.js
-    "baseUrl": "./", // Base directory to resolve non-absolute module names
+    "baseUrl": "./src", // Base directory to resolve non-absolute module names
     "paths": {
       "@app/*": [
-        "./src/app/*"
-      ], // Map @app/* imports to /src/app/*
+        "./app/*"
+      ], // Map @app/* imports to app/*
       "@config/*": [
-        "./src/config/*"
-      ], // Map @config/* imports to /src/config/*
+        "./config/*"
+      ], // Map @config/* imports to config/*
       "@lib/*": [
-        "./src/lib/*"
-      ], // Map @lib/* imports to /src/lib/*
+        "./lib/*"
+      ], // Map @lib/* imports to lib/*
+      "@auth/*": [
+        "./api/auth/*"
+      ], // Map @auth/* imports to /src/auth/*
       "@root/*": [
         "./*"
       ] // Map @root/* imports to /src/
@@ -28,6 +31,9 @@
   "include": [
     "src/**/*",
     "src/app/**/*",
-    "server.ts" // Adjust the path to your source files
+    "src/config/**/*",
+    "src/lib/**/*",
+    "src/api/auth/**/*",
+    "./server.ts" // Adjust the path to your source files
   ]
 }
