@@ -28,7 +28,7 @@ const {
   findUserByEmail,
   createUserByEmailAndPassword,
   deleteRefreshToken
-} = require('../users/user.services');
+} = require('../users/users.services');
 
 interface RegisterRequestBody {
   name: string;
@@ -87,6 +87,7 @@ const validateRequest = (schema: z.ZodObject<any>) => (req: Request, res: Respon
       }).parse(parsedData);
     }
 
+
     // attach the parsed data to the request object
     req.body = parsedData;
 
@@ -95,7 +96,7 @@ const validateRequest = (schema: z.ZodObject<any>) => (req: Request, res: Respon
 
   } catch (err) {
     if (err instanceof z.ZodError) {
-      res.status(400).json({ errors: err.errors });
+      return res.status(400).json({ errors: err.errors });
     } else {
       next(err);
     }
@@ -131,7 +132,7 @@ router.post('/register', validateRequest(registerSchemaBase), asyncHandler(async
   // console.log(req.body);
 
   if (existingUser) {
-    throw res.status(400).json({ message: 'User with this email already exists.' });
+    return res.status(400).json({ message: 'User with this email already exists.' });
   }
 
   const user = await createUserByEmailAndPassword({ email, password, name });
@@ -139,7 +140,7 @@ router.post('/register', validateRequest(registerSchemaBase), asyncHandler(async
   const { accessToken, refreshToken } = generateTokens(user, jti);
   await addRefreshTokenToWhitelist({ jti, refreshToken, userId: user.id });
 
-  res.status(201).json({
+  return res.status(201).json({
     accessToken,
     refreshToken,
   });
@@ -163,7 +164,6 @@ const loginSchema = z.object({
  * @throws A 500 response if an error occurs during the login process.
  */
 router.post('/login', validateRequest(loginSchema), asyncHandler(async (req: Request, res: Response) => {
-  console.log(req.body);
   try {
     const validateData = loginSchema.parse(req.body);
     console.log(validateData);
@@ -192,6 +192,10 @@ router.post('/login', validateRequest(loginSchema), asyncHandler(async (req: Req
       return res.status(400).json({ errors: error.errors });
     }
     return res.status(500).json({ message: 'An error occurred. Please try again later.' });
+
+
+
+
   }
 }));
 
@@ -207,10 +211,15 @@ interface RefreshTokenRequestBody {
 * @throws A 500 response if an error occurs during the logout process.
 * */
 
-router.post('/logout', async (req: Request, res: Response) => {
-  const { userId } = req.body;
-  await revokeTokens(userId);
-  res.status(200).json({ message: 'Logged out successfully.' });
+router.post('/logout', isAuthenticated, async (req: Request, res: Response) => {
+  if (req.payload && req.payload.userId) {
+    const userId = req.payload.userId;
+    await revokeTokens(userId);
+    res.clearCookie('token');
+    return res.status(200).json({ message: 'Logged out successfully.' });
+  } else {
+    return res.status(400).json({ message: 'Invalid request.' });
+  }
 });
 
 
@@ -218,25 +227,28 @@ router.post('/refreshToken', async (req: Request<{}, {}, RefreshTokenRequestBody
   try {
     const { refreshToken } = req.body;
     if (!refreshToken) {
-      res.status(400).json({ message: 'Refresh token is required.' });
+      return res.status(400).json({ message: 'Refresh token is required.' });
     }
     const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     const savedRefreshToken = await findRefreshTokenById(payload.jti);
 
+    // 401 Unauthorised: Invalid or revoked refresh token
     if (!savedRefreshToken || savedRefreshToken.revoked === true) {
-      res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).json({ message: 'Unauthorized' });
       throw new Error('Unauthorized');
     }
 
     const hashedToken = hashToken(refreshToken);
+    // 401 Unauthorised: Token mismatch
     if (hashedToken !== savedRefreshToken.hashedToken) {
-      res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).json({ message: 'Unauthorized' });
       throw new Error('Unauthorized');
     }
 
     const user = await findUserById(payload.userId);
+    // 401 Unauthorized: User not found
     if (!user) {
-      res.status(401).json({ message: 'Unauthorized' });
+      return res.status(401).json({ message: 'Unauthorized' });
       throw new Error('Unauthorized');
     }
 
@@ -245,7 +257,8 @@ router.post('/refreshToken', async (req: Request<{}, {}, RefreshTokenRequestBody
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(user, jti);
     await addRefreshTokenToWhitelist({ jti, refreshToken: newRefreshToken, userId: user.id });
 
-    res.json({
+    // Return the new tokens
+    return res.json({
       accessToken,
       refreshToken: newRefreshToken
     });
