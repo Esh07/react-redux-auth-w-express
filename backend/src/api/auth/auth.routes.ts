@@ -118,7 +118,6 @@ router.post('/register', validateRequest(registerSchemaBase), asyncHandler(async
 
   if (existingUser) {
     throw res.status(400).json({ message: 'User with this email already exists.' });
-
   }
 
   const user = await createUserByEmailAndPassword({ email, password, name });
@@ -163,7 +162,16 @@ router.post('/login', validateRequest(loginSchema), asyncHandler(async (req: Req
     }
 
     const token = generateTokens(user, uuidv4());
-    return res.status(200).json(token);
+
+    res.setHeader('Set-Cookie', cookie.serialize('token', token.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24, // 1 day
+      path: '/',
+    }));
+
+    return res.status(200).json({ message: 'Logged in successfully.' });
 
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -179,5 +187,3 @@ router.post('/login', validateRequest(loginSchema), asyncHandler(async (req: Req
 //     res.status(500).send('An error occurred. Please try again later.');
 //   }
 // );
-
-module.exports = { auth: router };
