@@ -11,8 +11,13 @@ const { generateTokens } = require('../../lib/jwt');
 
 const { comparePasswords } = require('../../utils/authUtils');
 
+import { hashToken } from '../../lib/hashToken';
+
 const {
   addRefreshTokenToWhitelist,
+  findRefreshTokenById,
+  findUserById,
+  revokeTokens,
 } = require('./auth.services');
 // const jwt = require('jsonwebtoken');
 
@@ -22,6 +27,7 @@ const router = express.Router();
 const {
   findUserByEmail,
   createUserByEmailAndPassword,
+  deleteRefreshToken
 } = require('../users/user.services');
 
 interface RegisterRequestBody {
@@ -79,7 +85,6 @@ const validateRequest = (schema: z.ZodObject<any>) => (req: Request, res: Respon
           });
         }
       }).parse(parsedData);
-
     }
 
     // attach the parsed data to the request object
@@ -189,6 +194,65 @@ router.post('/login', validateRequest(loginSchema), asyncHandler(async (req: Req
     return res.status(500).json({ message: 'An error occurred. Please try again later.' });
   }
 }));
+
+interface RefreshTokenRequestBody {
+  refreshToken: string;
+}
+
+/* Logs out a user by revoking all refresh tokens associated with the user.
+* If the user is successfully logged out, it sends a 200 response.
+* @param req - The request object.
+* @param res - The response object.
+* @returns A 200 response if the user is successfully logged out.
+* @throws A 500 response if an error occurs during the logout process.
+* */
+
+router.post('/logout', async (req: Request, res: Response) => {
+  const { userId } = req.body;
+  await revokeTokens(userId);
+  res.status(200).json({ message: 'Logged out successfully.' });
+});
+
+
+router.post('/refreshToken', async (req: Request<{}, {}, RefreshTokenRequestBody>, res: Response, next: NextFunction) => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      res.status(400).json({ message: 'Refresh token is required.' });
+    }
+    const payload = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+    const savedRefreshToken = await findRefreshTokenById(payload.jti);
+
+    if (!savedRefreshToken || savedRefreshToken.revoked === true) {
+      res.status(401).json({ message: 'Unauthorized' });
+      throw new Error('Unauthorized');
+    }
+
+    const hashedToken = hashToken(refreshToken);
+    if (hashedToken !== savedRefreshToken.hashedToken) {
+      res.status(401).json({ message: 'Unauthorized' });
+      throw new Error('Unauthorized');
+    }
+
+    const user = await findUserById(payload.userId);
+    if (!user) {
+      res.status(401).json({ message: 'Unauthorized' });
+      throw new Error('Unauthorized');
+    }
+
+    await deleteRefreshToken(savedRefreshToken.id);
+    const jti = uuidv4();
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(user, jti);
+    await addRefreshTokenToWhitelist({ jti, refreshToken: newRefreshToken, userId: user.id });
+
+    res.json({
+      accessToken,
+      refreshToken: newRefreshToken
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // Generic error handler Middleware
 // router.use((err: Error, req: Request, res: Response, next: NextFunction) => {
