@@ -1,12 +1,30 @@
 const bcrypt = require('bcrypt');
-const { db } = require('../../lib/db');
+import { User } from '@prisma/client';
+import db from '../../lib/db';
 
-function findUserByEmail(email: string) {
-  return db.user.findUnique({
-    where: {
-      email,
-    },
-  });
+function findUserByEmail(email: string): Promise<User | null> {
+  // console.log(db); // Add this line to check if db is correctly initialized
+  try {
+    const user = db.user.findUnique({
+      where: {
+        email,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found code line 17');
+    }
+    return user;
+  }
+  catch (err) {
+    console.log(err);
+    throw new Error('User not found');
+    // return db.user.findUnique({
+    //   where: {
+    //     email,
+    //   },
+    // });
+  }
 }
 
 function createUserByEmailAndPassword(user: { email: string; password: string }) {
@@ -16,7 +34,7 @@ function createUserByEmailAndPassword(user: { email: string; password: string })
   });
 }
 
-function findUserById(id: string) {
+function findUserById(id: string): Promise<User | null> {
   return db.user.findUnique({
     where: {
       id,
@@ -30,4 +48,4 @@ function findUserById(id: string) {
 //   createUserByEmailAndPassword
 // };
 
-export default { findUserByEmail, findUserById, createUserByEmailAndPassword };
+export { findUserByEmail, findUserById, createUserByEmailAndPassword };
