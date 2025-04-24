@@ -146,3 +146,45 @@ describe("Login User routes", () => {
   );
 
 });
+
+describe("Logout_routes", () => {
+
+  it("should successfully POST /auth/login", async () => {
+
+    const response = await request(app).post("/auth/login").send(loginData);
+
+    // fetch the token from httpOnly cookie using cookie-parser
+    const cookies = cookie.parse(response.headers["set-cookie"][0]);
+    token = cookies.token;
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: "Logged in successfully." });
+  });
+
+  it("should successfully POST /auth/logout", async () => {
+    const response = await request(app).post("/auth/logout").set("Cookie", `token=${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: "Logged out successfully." });
+  });
+});
+
+
+
+
+
+describe("Other routes", () => {
+  //   // Test "/user" GET route
+  it("GET /profile should return logged in user", async () => {
+    // login to get the token
+    const loginResponse = await request(app).post("/auth/login").send(loginData);
+    const cookies = cookie.parse(loginResponse.headers["set-cookie"][0]);
+    token = cookies.token;
+
+    const response = await request(app).get("/user/profile").set("Cookie", `token=${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(expect.objectContaining({
+      email: loginData.email,
+      name: userDataFields.name,
+    }));
+  });
+});
