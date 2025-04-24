@@ -5,7 +5,9 @@ const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 
 
-const { generateTokens } = require('./auth.services');
+const { generateTokens } = require('../../lib/jwt');
+
+const { comparePasswords } = require('../../utils/authUtils');
 
 const {
   addRefreshTokenToWhitelist,
