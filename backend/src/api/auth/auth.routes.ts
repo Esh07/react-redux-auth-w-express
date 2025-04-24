@@ -4,7 +4,6 @@ import { z, ZodObject, ZodRawShape, ZodSchema, ZodString } from "zod";
 const express = require('express');
 const { v4: uuidv4 } = require('uuid');
 
-
 const { generateTokens } = require('../../lib/jwt');
 
 const { comparePasswords } = require('../../utils/authUtils');
@@ -58,17 +57,19 @@ const validateRequest = (schema: z.ZodObject<any>) => (req: Request, res: Respon
   try {
     const parsedData = schema.parse(req.body);
 
-    // apply the validation on password and confirmPassword
-    schema.superRefine((data, ctx) => {
-      if (data.password !== data.confirmPassword) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Passwords do not match.',
-          path: ['confirmPassword'],
-        });
+    if (parsedData.confirmPassword) {
+      // apply the validation on password and confirmPassword
+      schema.superRefine((data, ctx) => {
+        if (data.password !== data.confirmPassword) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Passwords do not match.',
+            path: ['confirmPassword'],
+          });
+        }
       }
+      ).parse(parsedData);
     }
-    ).parse(parsedData);
 
     // attach the parsed data to the request object
     req.body = parsedData;
@@ -140,5 +141,3 @@ router.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).send('An error occurred. Please try again later.');
 }
 );
-
-module.exports = { auth: router };
