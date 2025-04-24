@@ -7,8 +7,9 @@
     "skipLibCheck": true, // Skip type checking of all declaration files (*.d.ts)
     "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references to the same file.
     "types": [
-      "node"
-    ], // Include type definitions for Node.js
+      "node",
+      "jest"
+    ], // Include type definitions for Node.js and Jest
     "baseUrl": "./src", // Base directory to resolve non-absolute module names
     "paths": {
       "@app/*": [
@@ -26,14 +27,20 @@
       "@root/*": [
         "./*"
       ] // Map @root/* imports to /src/
-    }
+    },
+    "outDir": "./dist" // Redirect output structure to the directory
   },
   "include": [
-    "src/**/*",
-    "src/app/**/*",
-    "src/config/**/*",
-    "src/lib/**/*",
-    "src/api/auth/**/*",
-    "./server.ts" // Adjust the path to your source files
+    "src/**/*.ts",
+    "src/app/**/*.ts",
+    "src/config/**/*.ts",
+    "src/lib/**/*.ts",
+    "src/api/auth/**/*.ts",
+    "./server.ts",
+    "__tests__/**/*.ts",
+    "./singleton.ts"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }
