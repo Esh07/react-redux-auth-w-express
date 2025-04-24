@@ -64,18 +64,7 @@ describe("GET /", () => {
 });
 
 
-
-
-
-
-
-
-
-
-
 describe("Auth Register User routes", () => {
-
-
 
   /*
  * Test "/auth/Register" POST route
@@ -108,12 +97,8 @@ describe("Auth Register User routes", () => {
   });
 });
 
-
-
-
 // Test User routes
 describe("Login User routes", () => {
-
 
   it("should fail POST /auth/login with wrong password", async () => {
     const email = userDataFields.email;
@@ -124,12 +109,6 @@ describe("Login User routes", () => {
   }
   );
 
-
-
-
-
-
-
   it("should successfully POST /auth/login", async () => {
     console.log(loginData);
     const response = await request(app).post("/auth/login").send(loginData);
@@ -138,7 +117,8 @@ describe("Login User routes", () => {
     const cookies = cookie.parse(response.headers["set-cookie"][0]);
     token = cookies.token;
     console.log(token);
-    expect(response.status).toBe(200).toEqual({ message: "Logged in successfully." });
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ message: "Logged in successfully." });
   });
 
 });
