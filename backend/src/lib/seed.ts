@@ -1,28 +1,29 @@
 import { PrismaClient, Prisma } from '@prisma/client'
 
+
+const bcrypt = require('bcrypt');
+
 const prisma = new PrismaClient()
 
 export const userData: Prisma.UserCreateInput[] = [
     {
-        email: 'esh@exmaple.com',
+        email: 'esh@example.com',
         name: 'Admin user',
         password: 'password',
         IsAdmin: true,
     },
     {
-        email: 'esh1@exmaple.com',
+        email: 'esh1@example.com',
         name: 'Test1 normal user',
         password: 'password',
         IsAdmin: false,
     },
     {
-        email: 'esh3@exmaple.com',
+        email: 'esh3@example.com',
         name: 'Test2 normal user',
         password: 'password',
         IsAdmin: false,
     },
-
-
 ]
 
 async function seedData() {
@@ -33,8 +34,12 @@ async function seedData() {
                 where: { email: u.email },
             });
             if (!existingUser) {
+                const hashedPassword = await bcrypt.hash(u.password, 10)
                 const user = await prisma.user.create({
-                    data: u,
+                    data: {
+                        ...u,
+                        password: hashedPassword,
+                    }
                 })
                 console.log(`Created user with id: ${user.id}`)
             } else {
@@ -59,4 +64,4 @@ seedData()
         process.exit(1)
     })
 
-export default seedData;  
+export default seedData;    
