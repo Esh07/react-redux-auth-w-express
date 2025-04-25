@@ -5,15 +5,27 @@ import cookie from 'cookie';
 
 interface Payload extends JwtPayload {
     userId: string;
-@@ -9, 6 + 10, 7 @@interface Payload extends JwtPayload {
+    payload?: string;
+}
 
-    interface CustomRequest extends Request {
-        payload?: Payload;
-        isAuthenticated?: boolean;
-    }
+interface CustomRequest extends Request {
+    payload?: Payload;
+    isAuthenticated?: boolean;
+}
 
-    function notFound(req: Request, res: Response, next: NextFunction) {
-        @@ -27, 41 + 29, 68 @@function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
+function notFound(req: Request, res: Response, next: NextFunction) {
+    res.status(404).json({ message: '🔍 - Not Found - 🕵️' });
+    const error = new Error(`🔍 - Not Found - ${req.originalUrl}`);
+    next(error);
+}
+
+/* eslint-disable no-unused-vars */
+function errorHandler(err: Error, req: Request, res: Response, next: NextFunction) {
+    /* eslint-enable no-unused-vars */
+    const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
+    res.status(statusCode).json({
+        message: err.message,
+        stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack
     });
 }
 
@@ -54,13 +66,13 @@ function isAuthenticated(req: CustomRequest, res: Response, next: NextFunction):
 
     } catch (err) {
         req.isAuthenticated = false;
-        res.status(401).json({ message: '🚫 Un-Authorized 🚫' });
+
 
         if (err instanceof jwt.TokenExpiredError) {
             res.status(401).json({ message: 'Token has  been expired' });
         }
         else {
-            res.json({ message: '🚫 Un-Authorized 🚫' });
+            res.status(401).json({ message: '🚫 Un-Authorized 🚫' });
         }
 
         return false;
@@ -71,8 +83,8 @@ function isAuthenticated(req: CustomRequest, res: Response, next: NextFunction):
 
 function checkAlreadyAuthenticated(req: CustomRequest, res: Response, next: NextFunction) {
     if (req.isAuthenticated) {
-        res.status(409).json({ message: 'Already authenticated' });
-        return;
+        return res.status(409).json({ message: 'Already authenticated' });
+
     }
     next();
 }
