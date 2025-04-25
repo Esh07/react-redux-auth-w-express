@@ -32,20 +32,23 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
 function isAuthenticated(req: CustomRequest, res: Response, next: NextFunction): boolean {
 
     // const { authorization } = req.headers;
+    let token = '';
 
-    const token = cookie.parse(req.headers.cookie || '').token;
-    console.log(token);
-
-    if (!token) {
-        console.log('Token not found in cookie');
-        req.isAuthenticated = false;
-        // next();
+    if (cookie.parse(req.headers.cookie || '').token) {
+        token = cookie.parse(req.headers.cookie || '').token;
+    } else if (req.body.token) {
+        token = req.body.token;
+    } else {
+        // res.status(401).json({ message: '🚫 Un-Authorized 🚫' });
         return false;
     }
+    console.log(token, 'token');
 
-    // if (!authorization) {
-    //     console.log(token);
-    //     res.status(401).json({ message: '🚫 Un-Authorized 🚫' });
+
+    // if (!token) {
+    //     console.log('Token not found in cookie');
+    //     req.isAuthenticated = false;
+    //     // res.status(401).json({ message: '🚫 Un-Authorized 🚫' });
     //     return false;
     // }
 
@@ -67,7 +70,6 @@ function isAuthenticated(req: CustomRequest, res: Response, next: NextFunction):
     } catch (err) {
         req.isAuthenticated = false;
 
-
         if (err instanceof jwt.TokenExpiredError) {
             res.status(401).json({ message: 'Token has  been expired' });
         }
@@ -84,7 +86,6 @@ function isAuthenticated(req: CustomRequest, res: Response, next: NextFunction):
 function checkAlreadyAuthenticated(req: CustomRequest, res: Response, next: NextFunction) {
     if (req.isAuthenticated) {
         return res.status(409).json({ message: 'Already authenticated' });
-
     }
     next();
 }

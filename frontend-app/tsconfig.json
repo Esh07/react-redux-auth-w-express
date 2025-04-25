@@ -22,17 +22,6 @@
       "vitest/globals"
     ],
     "baseUrl": "./", // Added for path aliases
-    "paths": {
-      "@app/*": [
-        "src/app/*"
-      ],
-      "@features/*": [
-        "src/features/*"
-      ],
-      "@api/*": [
-        "src/api/*"
-      ]
-    }
   },
   "include": [
     "src"
