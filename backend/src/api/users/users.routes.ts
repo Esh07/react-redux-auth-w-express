@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 const { isAuthenticated } = require('../../middlewares');
-const { findUserById } = require('./user.services');
+const { findUserById } = require('./users.services');
 
 const router = express.Router();
 
