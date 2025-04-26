@@ -43,7 +43,9 @@ This web application consists of a RESTful API (Express) and a React app.  The f
 
 ## Installation
 
-The installation process is divided into two parts: setting up the API (backend - express app) and setting up the React app.
+The installation process is divided into two parts:
+  - setting up the API (backend - express app)
+  - setting up the React app.
 
 #### Prerequisites
 
