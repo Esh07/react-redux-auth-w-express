@@ -18,10 +18,23 @@ export const userApiSlice = apiSlice.injectEndpoints({
       }),
 
     }),
+    updateUserProfile: build.mutation<UserProfile, Partial<UserProfile>>({
+      query: (userProfile) => ({
+        url: '/admin/update-user',
+        method: 'PATCH',
+        body: userProfile,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }),
+    }),
   }),
   overrideExisting: false,
 });
 
 export const {
   useGetProfileQuery,
+  useUpdateUserProfileMutation,
+
 } = userApiSlice;
