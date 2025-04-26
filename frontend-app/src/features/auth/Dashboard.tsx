@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import LogoutButton from "../../../src/components/LogoutButton";
 import { useGetUserDetailsQuery } from "./authApiSlice";
 import type { userDetailsTypes } from "../../../src/types";
-
+import ProfileCard from "../../../src/components/ProfileCard";
 
 
 
@@ -18,12 +18,7 @@ const Dashboard: React.FC = () => {
     const users = useSelector(selectUsers);
 
     const [searchQuery, setSearchQuery] = useState('');
-
-    const filteredUsers = userDetails?.users?.filter(user =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
+    const [isViewingProfile, setIsViewingProfile] = useState(true);
 
     const { data: selfDetails, error, isLoading, refetch } = useGetUserDetailsQuery(
         undefined,
@@ -33,7 +28,6 @@ const Dashboard: React.FC = () => {
         }
     );
 
-
     // Update the Redux store with user details when data is fetched
     useEffect(() => {
         if (selfDetails) {
@@ -41,6 +35,16 @@ const Dashboard: React.FC = () => {
             dispatch(setUserDetails(selfDetails));
         }
     }, [selfDetails, dispatch]);
+
+    // Handle loading and error states
+    if (isLoading) return <div>Loading...</div>;
+    if (error) return <div>Error loading data</div>;
+
+    const filteredUsers = userDetails?.users?.filter(user =>
+        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
 
     // Function to format the date
     function formatDate(dateString: string | undefined): string {
@@ -53,10 +57,16 @@ const Dashboard: React.FC = () => {
     }
 
 
+
+
     // date is the data returned from the server
     const createdAt = formatDate(userDetails?.user?.createdAt);
 
     const welcome = userDetails?.user?.IsAdmin ? `Welcome, ${userDetails?.user?.name}` : `Welcome, ${userDetails?.user?.name}`;
+
+    const handleToggleView = () => {
+        setIsViewingProfile((prev) => !prev);
+    }
 
     const profileContent = (<div className="max-w-md mx-auto mt-40 bg-white rounded-xl shadow-lg overflow-hidden md:max-w-2xl">
         <div className="md:flex">
@@ -141,7 +151,7 @@ const Dashboard: React.FC = () => {
                             {/* // make check box for is admin */}
                             <td className="w-4 p-4">
                                 <div className="flex items-center">
-                                    <input id={`checkbox-table-search-${eachUser.IsAdmin}`} type="checkbox" checked={eachUser.IsAdmin} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded accent-[#FF5100] focus:ring-[#FF5100] dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                                    <input id={`checkbox-table-search-${eachUser.IsAdmin}`} type="checkbox" checked={eachUser.IsAdmin} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded accent-[#FF5100] focus:ring-[#FF5100] dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" disabled={eachUser.IsAdmin} />
                                     <label htmlFor={`checkbox-table-search-${eachUser.IsAdmin}`} className="sr-only">checkbox</label>
                                 </div>
                             </td>
@@ -159,12 +169,43 @@ const Dashboard: React.FC = () => {
         <section className="container mx-auto">
             <div className="header-container flex justify-center items-center h-20 text-center flex-col my-5 gap-4">
                 <h1 className="text-xl">{welcome}</h1>
-                {userDetails?.user.IsAdmin && <p className="text-muted">List of all users</p>}
+                {userDetails?.user.IsAdmin && (
+                    <div className="flex gap-4">
+                        <button
+                            onClick={handleToggleView}
+                            className="bg-[#FF5100] text-white px-4 py-2 rounded-md hover:bg-red-600"
+                        >
+                            {isViewingProfile ? "View User List" : "View My Profile"}
+                        </button>
+                    </div>
+                )}
             </div>
-            {userDetails?.user.IsAdmin ? usersListContent : profileContent}
+            {userDetails?.user.IsAdmin ? (
+                isViewingProfile ? (
+                    // Admin Profile View
+                    <ProfileCard
+                        name={userDetails?.user?.name || ""}
+                        email={userDetails?.user?.email || ""}
+                        createdAt={createdAt}
+                    />
+                ) : (
+                    <>
+                        {usersListContent}
+                    </>
+                )
+            ) : (
+                // Normal User Profile View
+                <ProfileCard
+                    name={userDetails?.user?.name || ""}
+                    email={userDetails?.user?.email || ""}
+                    createdAt={createdAt}
+                    isEditable={true} // Allow edit button for normal users
+                />
+            )}
         </section>
     );
 };
+
 
 
 export default Dashboard;
