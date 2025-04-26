@@ -31,7 +31,6 @@ export const authApiSlice = apiSlice.injectEndpoints({
         url: `/user`,
         method: 'GET',
         credentials: 'include',
-
       }),
     }),
   }),

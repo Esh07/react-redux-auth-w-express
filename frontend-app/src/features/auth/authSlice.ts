@@ -37,10 +37,21 @@ const authSlice = createSlice({
             state.isAuthenticated = true;
         },
         logout: (state: AuthState) => {
+            console.log("logout.. ..");
             state.user = null;
             state.token = null;
             state.userDetails = undefined;
+            state.users = [];
             state.isAuthenticated = false;
+            console.log({
+                user: null,
+                token: null,
+                userDetails: undefined,
+                users: [],
+                isAuthenticated: false,
+
+            });
+            console.log(state, "state after logout");
         },
         setUserDetails: (state, action: PayloadAction<User>) => {
             state.userDetails = action.payload;

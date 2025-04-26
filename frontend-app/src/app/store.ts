@@ -12,9 +12,18 @@ import {
   REGISTER,
 } from 'redux-persist'
 
+import { createTransform } from 'redux-persist';
+
+const userTransform = createTransform(
+  (inboundState: any) => ({ token: inboundState.token }), // Persist only the token
+  (outboundState) => outboundState
+);
+
 const persistConfig = {
   key: "root",
   storage,
+  blacklist: ["userDetails", "users"], // Do not persist userDetails and users
+  transforms: [userTransform], // Apply the transform to persist only the token
 };
 
 const persistedReducer = persistReducer(persistConfig, authReducer);

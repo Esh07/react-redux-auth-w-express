@@ -3,7 +3,7 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../features/auth/authSlice';
-import { useLogoutMutation } from '../features/auth/authApiSlice';
+import { authApiSlice, useLogoutMutation } from '../features/auth/authApiSlice';
 import { persistor } from '../../src/app/store';
 import { selectCurrentToken } from '../features/auth/authSlice';
 
@@ -18,20 +18,26 @@ const LogoutButton: React.FC = () => {
         try {
 
             if (!token) {
-                console.error('No token found, cannot logout');
+                console.warn('No token found, proceeding to logout');
+                dispatch(logout());
+                dispatch(authApiSlice.util.resetApiState()); // Clear RTK Query cache
+                await persistor.purge(); // Clear persisted state
+                console.log('Persisted state purged');
+                navigate('/'); // Navigate to the home page
                 return;
             }
 
-            console.log('Initiating logout request');
             const resultLogout = await logoutApi(token).unwrap(); // Call logoutApi
-            console.log('Logout successful:', resultLogout);
 
             // If no error is thrown, logout was successful
             dispatch(logout());
-            persistor.purge(); // Clear persisted state
+            dispatch(authApiSlice.util.resetApiState()); // Clear RTK Query cache
+            await persistor.purge(); // Clear persisted state
             navigate('/'); // Navigate to the home page
         } catch (error) {
-            console.error('Logout request failed', error);
+            dispatch(logout());
+            await persistor.purge(); // Clear persisted state
+            navigate('/'); // Navigate to the home page
         }
     };
 
