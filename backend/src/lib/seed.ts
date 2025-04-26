@@ -27,41 +27,50 @@ export const userData: Prisma.UserCreateInput[] = [
 ]
 
 async function seedData() {
-    console.log(`Start seeding ...`)
+    const userCount = await prisma.user.count();
+    if (userCount > 0) {
+        console.log(`Database already seeded with ${userCount} users`);
+        return;
+    }
+
+    console.log(`Start seeding ...`);
     for (const u of userData) {
         try {
+            // check if the user already exists
+            console.log(`Creating user with email: ${u.email}`);
             const existingUser = await prisma.user.findUnique({
                 where: { email: u.email },
             });
+
             if (!existingUser) {
-                const hashedPassword = await bcrypt.hash(u.password, 10)
+                const hashedPassword = await bcrypt.hash(u.password, 10);
                 const user = await prisma.user.create({
                     data: {
                         ...u,
                         password: hashedPassword,
                     }
                 })
-                console.log(`Created user with id: ${user.id}`)
+                console.log(`Created user with id: ${user.id}`);
             } else {
-                console.log(`User with email ${u.email} already exists.`)
+                console.log(`User with email ${u.email} already exists.`);
             }
         }
         catch (e) {
-            console.error(`Failed to create user: ${u.email}`)
-            console.error(e)
+            console.error(`Failed to create user: ${u.email}`);
+            console.error(e);
         }
     }
     console.log(`Seeding finished.`);
 }
 
-seedData()
-    .then(async () => {
-        await prisma.$disconnect()
-    })
-    .catch(async (e) => {
-        console.error(e)
-        await prisma.$disconnect()
-        process.exit(1)
-    })
+// seedData()
+//     .then(async () => {
+//         await prisma.$disconnect()
+//     })
+//     .catch(async (e) => {
+//         console.error(e)
+//         await prisma.$disconnect()
+//         process.exit(1)
+//     })
 
 export default seedData;    

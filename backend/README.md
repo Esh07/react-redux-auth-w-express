@@ -21,11 +21,14 @@ This is a simple RESTful API built using Express.
 
 ### Prerequisites
 
-- Node.js (v20.10.0 or higher)
-- npm
-- clone the repository
+- [Node.js](https://nodejs.org/) (v20.10.0 or higher)
+- [npm](https://www.npmjs.com/) (v8 or higher)
+- Git (to clone the repository)
+
+Ensure you have these installed before proceeding.
 
 > if you haven't cloned the repository yet, follow the instructions from the main [README.md](../README.md#clone-the-repository).
+
 
 ### Go to 'backend' directory
 
@@ -55,38 +58,52 @@ In this project, SQLite is used as the database. It is a file-based database, so
 npx prisma migrate dev --name init
 ```
 
+Output should look like this:
+
+```bash
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": SQLite database "dev.db" at "file:./dev.db"
+
+Applying migration `20250426110847_init`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20250426110847_init/
+    └─ migration.sql
+
+Your database is now in sync with your schema.
+
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 43ms
+```
+
 #### Generate Prisma Client
 
 ```bash
 npx prisma generate
 ```
 
-#### Seed the Database (Optional)
-
-If you want to seed the database with some users, you can run the following command:
+Output should look like this:
 
 ```bash
-npm run seed
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 40ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
 ```
 
-Output:
 
-```bash
-> backend@1.0.0 seed
-> ts-node src/lib/seed.ts
+#### Seed the Database (automatically)
 
-Start seeding ...
-Created user with id: 9c187e3b-54de-4f1e-8400-b8f0c8a36851
-Created user with id: fa1245af-5720-4fe7-8cdf-4d6810663876
-Created user with id: 3f61838a-d0c8-44df-8c89-33d0523e5c9e
-Seeding finished.
-```
+When application starts, it will check if the database is empty. If it is empty, it will automatically seed the database with some initial data.
 
-This is how database looks like after seeding:
+Refer to the [`package.json`](package.json#l8) file for the script that seeds the database.
 
-![Database schema after seeding](./docs/img/db-after-seed.png)
-
-It will create a few users in the database. You can check the [`seed.ts`](src/lib/seed.ts) file for more details.
 
 ##### See the Database with Prisma Studio (Optional)
 
@@ -100,6 +117,26 @@ npx prisma studio
 
 ```bash
 npm run dev
+```
+
+Output should look like this:
+
+```bash
+
+> backend@1.0.0 start
+> ts-node server.ts
+
+Creating new PrismaClient
+Start seeding ...
+Creating user with email: esh@example.com
+Created user with id: 514e79a5-5a14-4cad-97a2-1e6f655593f6
+Creating user with email: esh1@example.com
+Created user with id: 9e127bd6-d8b1-4975-a231-1f13aa26b5e1
+Creating user with email: esh3@example.com
+Created user with id: 3fb27bd2-aa71-4dbf-b9a7-83e5f8739e48
+Seeding finished.
+Database connected
+REST API server ready at: http://localhost:3000
 ```
 
 Express app should now be running and connected to the SQLite database.
