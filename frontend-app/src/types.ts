@@ -19,6 +19,7 @@ export interface UserProfile {
   name: string;
   email: string;
   id: string;
+  IsAdmin: boolean;
   createdAt: string;
 }
 
@@ -32,5 +33,5 @@ export interface userDetailsTypes {
   email: string;
   name: string;
   createdAt: string;
-  isAdmin?: boolean;
+  IsAdmin?: boolean;
 }

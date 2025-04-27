@@ -42,8 +42,8 @@ const EditUserModal: React.FC<Props> = ({ editedUser, setEditedUser, onClose, on
                     <label className="flex items-center gap-2">
                         <input
                             type="checkbox"
-                            checked={editedUser.isAdmin}
-                            onChange={(e) => setEditedUser({ ...editedUser, isAdmin: e.target.checked })}
+                            checked={editedUser.IsAdmin}
+                            onChange={(e) => setEditedUser({ ...editedUser, IsAdmin: e.target.checked })}
                         />
                         Is Admin
                     </label>

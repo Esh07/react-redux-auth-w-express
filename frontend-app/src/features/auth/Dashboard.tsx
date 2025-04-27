@@ -92,6 +92,7 @@ const Dashboard: React.FC = () => {
 
 
     function openEditModal(user: any) {
+        console.log("Opening edit modal for user:", user);
         setEditedUser(user);
         setInitialUserState(user);
         setIsEditModalOpen(true);
@@ -115,6 +116,14 @@ const Dashboard: React.FC = () => {
     const handleEditSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // Ensure only the correct property is sent
+        const sanitizedUser = {
+            id: editedUser.id,
+            name: editedUser.name,
+            email: editedUser.email,
+            IsAdmin: editedUser.IsAdmin, // Use consistent casing
+        };
+
         // check if data is unchaged or empty any field 
         if (initialUserState && isEqualValues(initialUserState, editedUser)) {
             // close the modal
@@ -130,8 +139,17 @@ const Dashboard: React.FC = () => {
             setIsEditModalOpen(false);
 
             // use the updateUserProfile mutation to send the data to the server
+            console.log("Updating user profile with data:", editedUser);
 
-            const updatedUser = await updateUserById({ id: editedUser.id, userProfile: editedUser }).unwrap();
+            console.log("Sanitized user data:", sanitizedUser);
+            const updatedUser = await updateUserById({
+                id: sanitizedUser.id,
+                userProfile: {
+                    name: sanitizedUser.name,
+                    email: sanitizedUser.email,
+                    IsAdmin: sanitizedUser.IsAdmin,
+                }
+            }).unwrap();
             if (updatedUser) {
                 console.log('User updated successfully:', updatedUser);
                 setNotification({
@@ -280,19 +298,20 @@ const Dashboard: React.FC = () => {
                             {/* // make check box for is admin */}
                             <td className="w-4 p-4">
                                 <div className="flex items-center">
-                                    <input id={`checkbox-table-search-${eachUser.id}`} type="checkbox" checked={eachUser.IsAdmin} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded accent-[#FF5100] focus:ring-[#FF5100] dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" disabled={eachUser.IsAdmin} />
+                                    <input id={`checkbox-table-search-${eachUser.id}`} type="checkbox" checked={eachUser.IsAdmin} className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded accent-[#FF5100] focus:ring-[#FF5100] dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                        disabled={eachUser.IsAdmin} />
                                     <label htmlFor={`checkbox-table-search-${eachUser.id}`} className="sr-only">checkbox</label>
                                 </div>
                             </td>
                             {/* // dreate good time like 1 Jan 2024  */}
                             <td className="px-6 py-4 hidden md:table-cell">
-                                <span className={`inline-flex items-center rounded-full  mr-2 items-center px-2.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800`}>
+                                <span className={`inline-flex items-center rounded-full  mr-2 px-2.5 py-0.5  text-xs font-medium bg-orange-100 text-orange-800`}>
                                     {formatDate(eachUser.createdAt)}
                                 </span>
                             </td>
                             <td className="px-6 py-4 hidden md:table-cell">
                                 {/* <div className="flex items-center"> */}
-                                <span className={`inline-flex items-center rounded-full  mr-2 items-center px-2.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800`}>
+                                <span className={`inline-flex rounded-full  mr-2 items-center px-2.5 py-0.5  text-xs font-medium bg-orange-100 text-orange-800`}>
                                     {formatDate(eachUser.updatedAt)}
                                 </span>
                                 {/* </div> */}
@@ -305,7 +324,7 @@ const Dashboard: React.FC = () => {
                                             id: eachUser.id,
                                             name: eachUser.name,
                                             email: eachUser.email,
-                                            isAdmin: eachUser.isAdmin,
+                                            IsAdmin: eachUser.IsAdmin,
                                         })}
                                         className="inline-flex items-center justify-center p-1.5 rounded-md bg-[#4A90E2] hover:bg-[#357ABD] shadow-sm hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 lg:mb-2 md:mb-2 mb-2 me-2"
                                     >

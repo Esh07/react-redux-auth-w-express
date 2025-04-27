@@ -18,26 +18,27 @@ declare module 'express-serve-static-core' {
 
 
 // Helper function to handle common validation and update logic
-async function handleUpdate(userId: string, updateUserId: string, updateData: { email?: string, name?: string, isAdmin?: boolean }) {
+async function handleUpdate(requestingUser: { id: string, IsAdmin: boolean }, updateUserId: string, updateData: { email?: string, name?: string, IsAdmin?: boolean }) {
   // Validate the request body (only one field must be present)
-  if (!updateData.email && !updateData.name && updateData.isAdmin === undefined) {
+  if (!updateData.email && !updateData.name && updateData.IsAdmin === undefined) {
     throw { status: 400, message: 'Bad Request: You must provide at least one field to update' };
   }
-
   // Check if the user is trying to update 'isAdmin' (only allowed for admins)
-  if (updateData.isAdmin !== undefined && !updateData.isAdmin) {
-    delete updateData.isAdmin;  // Remove isAdmin if it's not allowed to update
+  if (requestingUser.IsAdmin !== undefined && !requestingUser.IsAdmin) {
+    console.log('isAdmin is not allowed to be updated');
+    delete updateData.IsAdmin;  // Remove isAdmin if it's not allowed to update
   }
 
   const validationData = {
     email: updateData.email,
     name: updateData.name,
+    IsAdmin: updateData?.IsAdmin,
   };
   // Proceed with updating the user details
   if (!validationData.email || !validationData.name) {
     throw { status: 400, message: 'Bad Request: Email and name are required' };
   }
-  const updatedUser = await updateUserDetailById(updateUserId, validationData as { email: string; name: string; isAdmin?: boolean });
+  const updatedUser = await updateUserDetailById(updateUserId, validationData as { email: string; name: string; IsAdmin?: boolean });
   return updatedUser;
 }
 
@@ -95,12 +96,15 @@ router.put('/profile', isAuthenticated, async (req: Request, res: Response, next
     const updateUserId = req.params.userId || userId; // You can update yourself or an admin can update another user
     const { email, name, isAdmin } = req.body; // Extract update data from request body
 
+    // get the user from the database
+    const user = await findUserById(userId);
+
     // ensure the user is same as the one in the payload
     if (userId !== updateUserId) {
       return res.status(403).json({ message: 'You do not have permission to perform this action' });
     }
 
-    const result = await handleUpdate(userId, userId, { email, name });
+    const result = await handleUpdate(user, userId, { email, name });
 
     // Return the result from the service function
     return res.status(result.status).json({ message: result.message, data: result.data });
@@ -114,19 +118,17 @@ router.put('/profile', isAuthenticated, async (req: Request, res: Response, next
 // PUT request for admin-update (admins can update any user's profile)
 router.put('/:id', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    console.log('Admin update user profile');
-    console.log('req.body:', req.payload);
     const { userId } = req.payload as { userId: string }; // Admin user ID from the payload
     const user = await findUserById(userId);
     const updateUserId = req.params.id; // The target user ID from the route params
-    const { email, name, isAdmin } = req.body; // Extract update data
+    const { email, name, IsAdmin } = req.body; // Extract update data
 
     // Check if the user is an admin
     if (!user || !user.IsAdmin) {
       return res.status(403).json({ message: 'You do not have permission to perform this action' });
     }
 
-    const result = await handleUpdate(userId, updateUserId, { email, name, isAdmin });
+    const result = await handleUpdate(user, updateUserId, { email, name, IsAdmin });
     return res.status(result.status).json({ message: result.message, data: result.data });
   } catch (err) {
     console.error('Error updating user profile', err);

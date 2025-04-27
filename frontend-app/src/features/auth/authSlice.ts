@@ -13,6 +13,7 @@ interface User {
     email: string;
     name: string;
     createdAt?: string;
+    IsAdmin?: boolean;
     users?: User[];
 }
 
