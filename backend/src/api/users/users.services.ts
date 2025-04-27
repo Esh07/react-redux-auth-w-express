@@ -148,6 +148,27 @@ export async function updateUserDetailById(
   }
 }
 
+function deleteUserById(userId: string): Promise<User> {
+
+  // check if user is exists
+  const user = db.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  return db.user.delete({
+    where: {
+      id: userId,
+    },
+  });
+}
+
+
 export {
   findUserByEmail,
   createUserByEmailAndPassword,
@@ -155,4 +176,5 @@ export {
   getUserDetails,
   getAllUsers,
   isAdmin,
+  deleteUserById
 };

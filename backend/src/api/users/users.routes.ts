@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { isAuthenticated } from '../../middlewares';
 const { findUserById } = require('./users.services');
-import { getAllUsers, getUserDetails, updateUserDetailById } from './users.services';  // The service function
+import { deleteUserById, getAllUsers, getUserDetails, updateUserDetailById } from './users.services';  // The service function
 
 
 const router = express.Router();
@@ -132,6 +132,27 @@ router.put('/:id', isAuthenticated, async (req: Request, res: Response, next: Ne
     return res.status(result.status).json({ message: result.message, data: result.data });
   } catch (err) {
     console.error('Error updating user profile', err);
+    next(err); // Pass error to error handling middleware
+  }
+});
+
+// DELETE request to delete a user by ID (admin only)
+router.delete('/:id', isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { userId } = req.payload as { userId: string }; // Admin user ID from the payload
+    const user = await findUserById(userId);
+    const deleteUserId = req.params.id; // The target user ID from the route params
+
+    // Check if the user is an admin
+    if (!user || !user.IsAdmin) {
+      return res.status(403).json({ message: 'You do not have permission to perform this action' });
+    }
+
+    // Call the service function to delete the user
+    const deletedUser = await deleteUserById(deleteUserId);
+    return res.status(200).json({ message: 'User deleted successfully', data: deletedUser });
+  } catch (err) {
+    console.error('Error deleting user', err);
     next(err); // Pass error to error handling middleware
   }
 });

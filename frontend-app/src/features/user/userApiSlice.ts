@@ -41,6 +41,16 @@ export const userApiSlice = apiSlice.injectEndpoints({
         credentials: 'include',
       }),
     }),
+    deleteUserById: build.mutation<void, string>({
+      query: (id) => ({
+        url: `/user/${id}`,
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }),
+    }),
   }),
 
   overrideExisting: false,
@@ -50,4 +60,5 @@ export const {
   useGetProfileQuery,
   useUpdateUserProfileMutation,
   useUpdateUserByIdMutation,
+  useDeleteUserByIdMutation,
 } = userApiSlice;

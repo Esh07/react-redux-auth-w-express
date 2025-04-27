@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentUser, selectCurrentToken, setUserDetails, selectUserDetails, selectUsers } from "./authSlice";
 import LogoutButton from "../../../src/components/LogoutButton";
@@ -6,12 +6,13 @@ import { useGetUserDetailsQuery } from "./authApiSlice";
 import ProfileCard from "../../../src/components/ProfileCard";
 import { PencilSquareIcon, UserMinusIcon } from '@heroicons/react/24/outline'
 import * as Yup from 'yup';
-import { useUpdateUserByIdMutation, useUpdateUserProfileMutation } from "../user/userApiSlice";
+import { useUpdateUserByIdMutation, useUpdateUserProfileMutation, useDeleteUserByIdMutation } from "../user/userApiSlice";
 import { Notification } from "../../../src/components/Notification";
 import { formatDate, isEqualValues } from "../../../src/utils/helpers";
 import { editUserSchema } from "../../../src/schemas/editUserSchema";
 import EditUserModal from "../../components/admin/EditUserModal";
 import type { userDetailsTypes } from "../../../src/types";
+import DeleteConfirmationModal from "../../components/admin/DeleteUserModal";
 
 
 const Dashboard: React.FC = () => {
@@ -42,6 +43,9 @@ const Dashboard: React.FC = () => {
         duration: 3000,
     });
 
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState<any | null>(null);
+
 
 
     const { data: selfDetails, error, isLoading, refetch } = useGetUserDetailsQuery(
@@ -55,6 +59,7 @@ const Dashboard: React.FC = () => {
     // Use mutation to update the profile
     const [updateUserProfile, { isLoading: isUpdating }] = useUpdateUserProfileMutation();
     const [updateUserById, { isLoading: isUpdatingById, error: updateUserByIdError }] = useUpdateUserByIdMutation();
+    const [deleteUserById, { isLoading: isDeletingUserById }] = useDeleteUserByIdMutation();
 
 
     // Update the Redux store with user details when data is fetched
@@ -78,15 +83,16 @@ const Dashboard: React.FC = () => {
 
     const [editedUser, setEditedUser] = useState<any>(null);
 
+    const filteredUsers = useMemo(() => {
+        return userDetails?.users?.filter(user =>
+            user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            user.email.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [searchQuery, userDetails?.users]);
 
     // Handle loading and error states
     if (isLoading) return <div>Loading...</div>;
     if (error) return <div>Error loading data</div>;
-
-    const filteredUsers = userDetails?.users?.filter(user =>
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
 
 
 
@@ -199,6 +205,39 @@ const Dashboard: React.FC = () => {
 
         }
     }
+
+    const openDeleteModal = (user: any) => {
+        setUserToDelete(user);
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDelete = async () => {
+        if (userToDelete) {
+            // Call your API for deletion (you can integrate a delete mutation here)
+            try {
+                console.log('Deleting user:', userToDelete);
+                // Simulate the deletion API call
+                await deleteUserById(userToDelete.id).unwrap();
+                setNotification({
+                    isVisible: true,
+                    type: 'success',
+                    title: 'Success!',
+                    message: 'User deleted successfully.',
+                    duration: 5000,
+                });
+                refetch();  // Refetch users after deletion to update the list
+            } catch (error) {
+                setNotification({
+                    isVisible: true,
+                    type: 'error',
+                    title: 'Error',
+                    message: 'Error deleting user.',
+                    duration: 5000,
+                });
+            }
+        }
+        setIsDeleteModalOpen(false);  // Close the modal after the action
+    };
 
 
 
@@ -333,7 +372,7 @@ const Dashboard: React.FC = () => {
 
                                     {/* Delete Button */}
                                     <button
-                                        // onClick={() => openEditModal(eachUser)}
+                                        onClick={() => openDeleteModal(eachUser)}
                                         className="inline-flex items-center justify-center p-1.5 rounded-md bg-[#E74C3C] hover:bg-[#C0392B] shadow-sm hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 md:me-0 lg:ml-2 lg:mb-2 "
                                     >
                                         <UserMinusIcon className="w-4 h-4 text-white" />
@@ -401,7 +440,14 @@ const Dashboard: React.FC = () => {
                 <Notification {...notification} onClose={() => setNotification({ ...notification, isVisible: false })} />
 
             )}
-        </section>
+
+            {/* Delete Confirmation Modal */}
+            <DeleteConfirmationModal
+                isDeleteModalOpen={isDeleteModalOpen}
+                setIsDeleteModalOpen={setIsDeleteModalOpen}
+                handleDelete={handleDelete}
+            />
+        </section >
     );
 };
 
