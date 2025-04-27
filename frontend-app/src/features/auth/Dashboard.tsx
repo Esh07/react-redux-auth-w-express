@@ -6,7 +6,7 @@ import { useGetUserDetailsQuery } from "./authApiSlice";
 import ProfileCard from "../../../src/components/ProfileCard";
 import { PencilSquareIcon, UserMinusIcon } from '@heroicons/react/24/outline'
 import * as Yup from 'yup';
-import { useUpdateUserProfileMutation } from "../user/userApiSlice";
+import { useUpdateUserByIdMutation, useUpdateUserProfileMutation } from "../user/userApiSlice";
 import { Notification } from "../../../src/components/Notification";
 import { formatDate, isEqualValues } from "../../../src/utils/helpers";
 import { editUserSchema } from "../../../src/schemas/editUserSchema";
@@ -52,8 +52,9 @@ const Dashboard: React.FC = () => {
         }
     );
 
-    // Send edit user data to the server (update user profile)
+    // Use mutation to update the profile
     const [updateUserProfile, { isLoading: isUpdating }] = useUpdateUserProfileMutation();
+    const [updateUserById, { isLoading: isUpdatingById, error: updateUserByIdError }] = useUpdateUserByIdMutation();
 
 
     // Update the Redux store with user details when data is fetched
@@ -114,6 +115,13 @@ const Dashboard: React.FC = () => {
     const handleEditSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // check if data is unchaged or empty any field 
+        if (initialUserState && isEqualValues(initialUserState, editedUser)) {
+            // close the modal
+            setIsEditModalOpen(false);
+            return;
+        }
+
         try {
 
             // validate the form data with Yup
@@ -123,31 +131,37 @@ const Dashboard: React.FC = () => {
 
             // use the updateUserProfile mutation to send the data to the server
 
-            const updatedUser = await updateUserProfile(editedUser).unwrap();
-            console.log('User updated successfully:', updatedUser);
-            setNotification({
-                isVisible: true,
-                type: 'success',
-                title: 'Success!',
-                message: 'User updated successfully.',
-                duration: 5000, // Show for 5 seconds
-            });
+            const updatedUser = await updateUserById({ id: editedUser.id, userProfile: editedUser }).unwrap();
+            if (updatedUser) {
+                console.log('User updated successfully:', updatedUser);
+                setNotification({
+                    isVisible: true,
+                    type: 'success',
+                    title: 'Success!',
+                    message: 'User updated successfully.',
+                    duration: 5000, // Show for 5 seconds
+                });
+            }
 
 
-            // shoot a toast notification with success message with tailwindcss
-            alert("User updated successfully");
             // refetch the user details to get the updated data
             refetch();
 
 
         } catch (error) {
-            setNotification({
-                isVisible: true,
-                type: 'error',
-                title: 'Validation Error',
-                message: `Please fix the errors in the form. ${error}`,
-                duration: 3000,
-            });
+
+            // make sure show the error message in the notification (error is object)
+
+
+            if (error && typeof error === 'object' && 'data' in error) {
+                setNotification({
+                    isVisible: true,
+                    type: 'error',
+                    title: 'Error',
+                    message: error?.data.message || 'An error occurred while updating the user.',
+                    duration: 5000,
+                });
+            }
 
             if (error instanceof Yup.ValidationError) {
                 setNotification({
@@ -155,7 +169,7 @@ const Dashboard: React.FC = () => {
                     type: 'error',
                     title: 'Validation Error',
                     message: 'Please fix the errors in the form.',
-                    duration: 3000,
+                    duration: 5000,
                 });
                 const errors: Record<string, string> = {};
                 error.inner.forEach((err) => {

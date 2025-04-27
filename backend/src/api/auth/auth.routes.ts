@@ -245,7 +245,7 @@ router.post('/login', validateRequest(loginSchema), asyncHandler(async (req: Req
       });
     }
 
-    console.log("newRefreshTokenArray after if statement", newRefreshTokenArray);
+    // console.log("newRefreshTokenArray after if statement", newRefreshTokenArray);
 
     // set the refresh and access tokens in the response cookies
     res.cookie('token', token.accessToken, {
@@ -450,31 +450,5 @@ router.post('/refreshToken', async (req: Request, res: Response, next: NextFunct
   }
 });
 
-// Endpoint to get user profile details or all users based on role
-router.get('/', isAuthenticated, async (req: Request, res: Response) => {
-  try {
-    if (req.payload && req.payload.userId) {
-      const user = await getUserDetails(req.payload.userId);
-      if (user) {
-        // Check if user is an admin
-        if (user.IsAdmin) {
-          const user = await getUserDetails(req.payload.userId);
-          // If admin, return the list of all users
-          const users = await getAllUsers();
-          return res.status(200).json({ users, user });
-        } else {
-          // If not admin, return details of the authenticated user
-          return res.status(200).json({ user });
-        }
-      } else {
-        return res.status(404).json({ message: 'User not found.' });
-      }
-    }
-    return res.status(400).json({ message: 'Invalid request.' });
-  } catch (error) {
-    console.error('Error fetching user details or user list:', error);
-    return res.status(500).json({ message: 'Internal server error.' });
-  }
-});
 
 module.exports = { auth: router };

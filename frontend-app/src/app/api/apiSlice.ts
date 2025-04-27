@@ -35,7 +35,7 @@ export const baseQueryWithReauth: BaseQueryFn<string | FetchArgs, unknown, Fetch
             console.log("Reauthenticating...");
             // Reauthenticate here and retry the request to get a new token from refresh token
             const reauthResult = await baseQuery({
-                url: "/user/refreshToken",
+                url: "/auth/refreshToken",
                 method: "POST",
                 credentials: "include",
             }, api, extraOptions);

@@ -26,20 +26,19 @@ app.use(cors({
 // A route declaration section
 const { auth } = require('../api/auth/auth.routes');
 // console.log(auth)
-app.use('/user', auth);
+app.use('/auth', auth); // Apply authentication middleware to the /user route
+
+// i want to make /user is not accessible without authentication
+
 
 const { user } = require('../api/users/users.routes');
 // console.log(user)
-// app.use('/user', user);
+app.use('/user', user); // Apply authentication middleware to the /user route
 
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'Hello World!' });
-
-    // console.log('Hello World!')
 }
 );
-
-
 
 
 export { app };

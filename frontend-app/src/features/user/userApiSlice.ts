@@ -20,8 +20,20 @@ export const userApiSlice = apiSlice.injectEndpoints({
     }),
     updateUserProfile: build.mutation<UserProfile, Partial<UserProfile>>({
       query: (userProfile) => ({
-        url: '/admin/update-user',
-        method: 'PATCH',
+        url: '/user/profile',
+        method: 'PUT',
+        body: userProfile,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      }),
+    }),
+    // Update user by ID (for admin or user with the correct permissions)
+    updateUserById: build.mutation<UserProfile, { id: string, userProfile: Partial<UserProfile> }>({
+      query: ({ id, userProfile }) => ({
+        url: `/user/${id}`,
+        method: 'PUT',
         body: userProfile,
         headers: {
           'Content-Type': 'application/json',
@@ -30,11 +42,12 @@ export const userApiSlice = apiSlice.injectEndpoints({
       }),
     }),
   }),
+
   overrideExisting: false,
 });
 
 export const {
   useGetProfileQuery,
   useUpdateUserProfileMutation,
-
+  useUpdateUserByIdMutation,
 } = userApiSlice;

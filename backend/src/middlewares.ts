@@ -29,6 +29,9 @@ function errorHandler(err: Error, req: Request, res: Response, next: NextFunctio
     });
 }
 
+/**
+ * Middleware to check if the user is authenticated
+ */
 function isAuthenticated(req: CustomRequest, res: Response, next: NextFunction): boolean {
 
     // const { authorization } = req.headers;
@@ -42,7 +45,6 @@ function isAuthenticated(req: CustomRequest, res: Response, next: NextFunction):
         // res.status(401).json({ message: '🚫 Un-Authorized 🚫' });
         return false;
     }
-    console.log(token, 'token');
 
 
     // if (!token) {
