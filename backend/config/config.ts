@@ -15,7 +15,7 @@ const config = {
   },
   test: {
     dialect: 'sqlite',
-    storage: './test.db'
+    storage: './__test__/test.db', // Place the test database in the __test__ directory
   },
   // production: {
   //   dialect: 'sqlite',

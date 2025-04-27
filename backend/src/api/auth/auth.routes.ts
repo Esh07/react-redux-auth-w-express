@@ -451,4 +451,4 @@ router.post('/refreshToken', async (req: Request, res: Response, next: NextFunct
 });
 
 
-module.exports = { auth: router };
+export const auth = router;
