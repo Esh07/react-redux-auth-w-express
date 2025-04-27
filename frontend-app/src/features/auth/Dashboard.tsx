@@ -10,6 +10,7 @@ import Modal from "../../../src/components/Modal";
 import { PencilSquareIcon, UserMinusIcon } from '@heroicons/react/24/outline'
 import * as Yup from 'yup';
 import { useUpdateUserProfileMutation } from "../user/userApiSlice";
+import { Notification } from "../../../src/components/Notification";
 
 
 const editUserSchema = Yup.object().shape({
@@ -41,7 +42,19 @@ const Dashboard: React.FC = () => {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-
+    const [notification, setNotification] = useState<{
+        isVisible: boolean;
+        type: 'success' | 'error' | 'info' | undefined;
+        title: string;
+        message: string;
+        duration: number;
+    }>({
+        isVisible: false,
+        type: undefined, // e.g., 'success', 'error', 'info'
+        title: '',
+        message: '',
+        duration: 3000,
+    });
 
 
 
@@ -64,6 +77,17 @@ const Dashboard: React.FC = () => {
             dispatch(setUserDetails(selfDetails));
         }
     }, [selfDetails, dispatch]);
+
+    useEffect(() => {
+        if (notification.isVisible) {
+            const timer = setTimeout(() => {
+                setNotification({ ...notification, isVisible: false });
+            }, notification.duration);
+
+            return () => clearTimeout(timer);
+        }
+    }, [notification]);
+
 
     const [editedUser, setEditedUser] = useState({
         name: '',
@@ -132,6 +156,14 @@ const Dashboard: React.FC = () => {
 
             const updatedUser = await updateUserProfile(editedUser).unwrap();
             console.log('User updated successfully:', updatedUser);
+            setNotification({
+                isVisible: true,
+                type: 'success',
+                title: 'Success!',
+                message: 'User updated successfully.',
+                duration: 5000, // Show for 5 seconds
+            });
+
 
             // shoot a toast notification with success message with tailwindcss
             alert("User updated successfully");
@@ -140,9 +172,22 @@ const Dashboard: React.FC = () => {
 
 
         } catch (error) {
+            setNotification({
+                isVisible: true,
+                type: 'error',
+                title: 'Validation Error',
+                message: `Please fix the errors in the form. ${error}`,
+                duration: 3000,
+            });
 
             if (error instanceof Yup.ValidationError) {
-                alert("Pleade fix the errors in the form");
+                setNotification({
+                    isVisible: true,
+                    type: 'error',
+                    title: 'Validation Error',
+                    message: 'Please fix the errors in the form.',
+                    duration: 3000,
+                });
                 const errors: Record<string, string> = {};
                 error.inner.forEach((err) => {
                     if (err.path) errors[err.path] = err.message;
@@ -459,7 +504,16 @@ const Dashboard: React.FC = () => {
                 </div>
             )}
 
-
+            {notification.isVisible && (
+                <Notification
+                    isVisible={notification.isVisible}
+                    type={notification.type}
+                    title={notification.title}
+                    message={notification.message}
+                    duration={notification.duration}
+                    onClose={() => setNotification({ ...notification, isVisible: false })}
+                />
+            )}
         </section>
     );
 };
