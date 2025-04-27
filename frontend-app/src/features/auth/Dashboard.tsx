@@ -1,43 +1,29 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { selectCurrentUser, selectCurrentToken, setUserDetails, setUsers, selectUserDetails, selectUsers } from "./authSlice";
-import { Link } from "react-router-dom";
+import { selectCurrentUser, selectCurrentToken, setUserDetails, selectUserDetails, selectUsers } from "./authSlice";
 import LogoutButton from "../../../src/components/LogoutButton";
 import { useGetUserDetailsQuery } from "./authApiSlice";
-import type { userDetailsTypes } from "../../../src/types";
 import ProfileCard from "../../../src/components/ProfileCard";
-import Modal from "../../../src/components/Modal";
 import { PencilSquareIcon, UserMinusIcon } from '@heroicons/react/24/outline'
 import * as Yup from 'yup';
 import { useUpdateUserProfileMutation } from "../user/userApiSlice";
 import { Notification } from "../../../src/components/Notification";
+import { formatDate, isEqualValues } from "../../../src/utils/helpers";
+import { editUserSchema } from "../../../src/schemas/editUserSchema";
+import EditUserModal from "../../components/admin/EditUserModal";
+import type { userDetailsTypes } from "../../../src/types";
 
-
-const editUserSchema = Yup.object().shape({
-    name: Yup.string()
-        .required('Name is required')
-        .min(2, 'Name must be at least 3 characters long')
-        .max(50, 'Name must not exceed 50 characters'),
-    email: Yup.string()
-        .email('Invalid email format')
-        .notRequired(),
-    isAdmin: Yup.boolean()
-        .notRequired(),
-
-});
 
 const Dashboard: React.FC = () => {
 
     const dispatch = useDispatch();
     const token = useSelector(selectCurrentToken);
-    const user = useSelector(selectCurrentUser);
     const userDetails = useSelector(selectUserDetails);
-    const users = useSelector(selectUsers);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [isViewingProfile, setIsViewingProfile] = useState(true);
 
-    const [initialUserState, setInitialUserState] = useState<Partial<User> | null>(null);
+    const [initialUserState, setInitialUserState] = useState<Partial<userDetailsTypes> | null>(null);
 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -89,11 +75,7 @@ const Dashboard: React.FC = () => {
     }, [notification]);
 
 
-    const [editedUser, setEditedUser] = useState({
-        name: '',
-        email: '',
-        isAdmin: selfDetails?.user?.IsAdmin || false,
-    });
+    const [editedUser, setEditedUser] = useState<any>(null);
 
 
     // Handle loading and error states
@@ -106,15 +88,6 @@ const Dashboard: React.FC = () => {
     );
 
 
-    // Function to format the date
-    function formatDate(dateString: string | undefined): string {
-        if (!dateString) return "";
-        return new Date(dateString).toLocaleDateString('en-GB', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    }
 
 
     function openEditModal(user: any) {
@@ -124,17 +97,13 @@ const Dashboard: React.FC = () => {
         console.log("Opening edit modal for user:", user);
     }
 
-    const isEqualValues = (obj1: any, obj2: any) => {
-        return JSON.stringify(obj1) === JSON.stringify(obj2);
-    };
-
     function closeEditModal() {
 
         // DO not close the modal if there are unsaved changes
         if (initialUserState && !isEqualValues(initialUserState, editedUser)) {
-            const confirmaClose = window.confirm("You have unsaved changes. Are you sure you want to discard them?");
-            console.log("User confirmed close:", confirmaClose);
-            if (confirmaClose) {
+            const confirmClose = window.confirm("You have unsaved changes. Are you sure you want to discard them?");
+            console.log("User confirmed close:", confirmClose);
+            if (confirmClose) {
                 setIsEditModalOpen(false); // Close if confirmed
             }
         } else {
@@ -303,13 +272,13 @@ const Dashboard: React.FC = () => {
                             </td>
                             {/* // dreate good time like 1 Jan 2024  */}
                             <td className="px-6 py-4 hidden md:table-cell">
-                                <span className={`inline-flex items-center rounded-full  mr-2 inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800`}>
+                                <span className={`inline-flex items-center rounded-full  mr-2 items-center px-2.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800`}>
                                     {formatDate(eachUser.createdAt)}
                                 </span>
                             </td>
                             <td className="px-6 py-4 hidden md:table-cell">
                                 {/* <div className="flex items-center"> */}
-                                <span className={`inline-flex items-center rounded-full  mr-2 inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800`}>
+                                <span className={`inline-flex items-center rounded-full  mr-2 items-center px-2.5 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800`}>
                                     {formatDate(eachUser.updatedAt)}
                                 </span>
                                 {/* </div> */}
@@ -322,7 +291,7 @@ const Dashboard: React.FC = () => {
                                             id: eachUser.id,
                                             name: eachUser.name,
                                             email: eachUser.email,
-                                            isAdmin: eachUser.IsAdmin,
+                                            isAdmin: eachUser.isAdmin,
                                         })}
                                         className="inline-flex items-center justify-center p-1.5 rounded-md bg-[#4A90E2] hover:bg-[#357ABD] shadow-sm hover:shadow-md transition-all duration-300 ease-in-out transform hover:scale-105 lg:mb-2 md:mb-2 mb-2 me-2"
                                     >
@@ -386,133 +355,18 @@ const Dashboard: React.FC = () => {
                 />
             )}
             {isEditModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 animate-fadeIn">
-                    <div className="relative bg-white dark:bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-lg mx-4 animate-scaleIn">
-
-                        {/* Close Button */}
-                        <button
-                            onClick={closeEditModal}
-                            className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-
-                        {/* Title */}
-                        <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-6 text-center">
-                            Edit User
-                        </h2>
-
-                        {/* Form */}
-                        <form onSubmit={handleEditSubmit} className="space-y-6">
-
-                            {/* Name Input */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Name
-                                </label>
-                                <input
-                                    type="text"
-                                    value={editedUser.name}
-                                    onChange={(e) => setEditedUser({ ...editedUser, name: e.target.value })}
-                                    className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-[#FF5100] focus:border-[#FF5100] outline-none transition duration-300"
-                                    placeholder="Enter name"
-                                    required
-                                />
-                            </div>
-
-                            {/* Email Input */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Email
-                                </label>
-                                <input
-                                    type="email"
-                                    value={editedUser.email}
-                                    onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
-                                    className="w-full p-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-white focus:ring-[#FF5100] focus:border-[#FF5100] outline-none transition duration-300"
-                                    placeholder="Enter email"
-                                    required
-                                />
-                            </div>
-
-                            {/* Is Admin Checkbox */}
-                            <div className="flex items-center justify-start space-x-3">
-                                {/* Hidden Default Checkbox */}
-                                <input
-                                    type="checkbox"
-                                    id="isAdmin"
-                                    checked={editedUser.isAdmin}  // Make sure this reflects the current state
-                                    onChange={(e) => setEditedUser({ ...editedUser, isAdmin: e.target.checked })}
-                                    className="hidden peer"
-                                />
-
-                                {/* Label for the Checkbox */}
-                                <label
-                                    htmlFor="isAdmin"
-                                    className="flex items-center cursor-pointer space-x-2 text-sm text-gray-700 dark:text-gray-300"
-                                >
-                                    <span className="relative inline-flex">
-                                        {/* Custom Styled Checkbox */}
-                                        <span
-                                            className={`block w-6 h-6 rounded-md border-2 
-                                            ${editedUser.isAdmin ? 'border-[#FF5100] bg-[#FF5100]' : 'border-gray-300 bg-gray-100'} 
-                                            dark:${editedUser.isAdmin ? 'border-[#FF5100] bg-[#FF5100]' : 'border-gray-600 bg-gray-700'} 
-                                            peer-checked:border-transparent peer-checked:ring-2 peer-checked:ring-[#FF5100]
-                                            transition-all duration-300`}
-                                        ></span>
-
-                                        {/* Checkmark (Visible When Checked) */}
-                                        <span
-                                            className={`absolute top-0 left-0 w-6 h-6 flex items-center justify-center 
-                                            ${editedUser.isAdmin ? 'text-white opacity-100' : 'opacity-0'} peer-checked:opacity-100 
-                                            peer-checked:transition-opacity duration-300`}
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </span>
-                                    </span>
-                                    {/* Label Text */}
-                                    <span>Is Admin</span>
-                                </label>
-                            </div>
-
-
-
-
-                            {/* Action Buttons */}
-                            <div className="flex justify-end gap-6 pt-6">
-                                <button
-                                    type="button"
-                                    onClick={closeEditModal}
-                                    className="px-6 py-3 rounded-md bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-500 transition duration-300"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    onSubmit={handleEditSubmit}
-                                    className="px-6 py-3 rounded-md bg-[#FF5100] text-white hover:bg-[#e64900] transition duration-300"
-                                >
-                                    Save
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                <EditUserModal
+                    editedUser={editedUser}
+                    setEditedUser={setEditedUser}
+                    onClose={closeEditModal}
+                    onSubmit={handleEditSubmit}
+                    formErrors={formErrors}
+                />
             )}
 
             {notification.isVisible && (
-                <Notification
-                    isVisible={notification.isVisible}
-                    type={notification.type}
-                    title={notification.title}
-                    message={notification.message}
-                    duration={notification.duration}
-                    onClose={() => setNotification({ ...notification, isVisible: false })}
-                />
+                <Notification {...notification} onClose={() => setNotification({ ...notification, isVisible: false })} />
+
             )}
         </section>
     );
