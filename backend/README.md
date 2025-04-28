@@ -16,6 +16,7 @@ This is a simple RESTful API built using Express.
   - [Start the Server](#start-the-server)
   - [API Endpoints](#api-endpoints)
   - [Unit tests](#unit-tests)
+  
 
 ## Installation
 
@@ -153,8 +154,46 @@ Express app should now be running and connected to the SQLite database.
 
 ## Unit tests
 
-Unit tests are written using Jest and Supertest. To run the tests, use the following command:
+Unit tests are written using **Jest** and **Supertest** to ensure the functionality of the backend API.
+
+### Running Tests
+
+To run the tests, use the following command:
 
 ```bash
-npm test -- --watch
+npm run test
 ```
+
+#### Test Scenarios
+The following scenarios are covered in the tests:
+
+**Authentication Routes**:
+
+**POST /auth/register**:
+- Successful user registration.
+- Registration with missing fields.
+- Registration with invalid email.
+- Registration with mismatched passwords.
+- Registration with an already existing email.
+
+**POST /auth/login**:
+- Successful login with valid credentials.
+- Login with missing fields.
+- Login with invalid credentials.
+
+**POST /auth/logout**:
+- Successful user logout.
+- Logout without a valid token.
+
+**User Routes**:
+
+GET /users:
+- Admin user retrieves all users and their own details.
+- Non-admin user retrieves only their own details.
+- User not found.
+- Invalid request.
+
+GET /users/profile:
+- Retrieve authenticated user's profile details.
+- User not found.
+- Invalid request.
