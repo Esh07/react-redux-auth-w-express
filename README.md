@@ -15,29 +15,39 @@ This web application consists of a RESTful API (Express) and a React app.  The f
 
 - **RESTful API**:
 
-  - User Authentication:
+  - **User Authentication**:
     - Register: POST `/user/register`
     - Login: POST `/user/login`
     - Logout: POST `/user/logout`
-  - User Management:
-    - Get all users: GET `/user` (admin only)
-    - Get current user detail: GET `/user`
-  - JWT-based authentication
-    - Access token:
-      - HTTP-only cookie
-      - Expires in 3 hours validity (configurable)
-    - Refresh token:
-      - HTTP-only cookie
-      - Expires in 24 hours validity (configurable)
+
+  - **User Management**:
+    - **Admin Capabilities**:
+      - View a list of all users: GET `/user` (admin only)
+      - Update user information: PUT `/user/:id` (admin only)
+      - Delete a user: DELETE `/user/:id` (admin only)
+    - **Self-Management**:
+      - View current user details: GET `/user`
+      - Update own profile: PUT `/user/profile` (Partialy code implemented, not fully functional - test pending)
+
+  - **JWT-based Authentication**:
+    - **Access Token**:
+      - Stored in an HTTP-only cookie.
+      - Expires in 3 hours (configurable).
+    - **Refresh Token**:
+      - Stored in an HTTP-only cookie.
+      - Expires in 24 hours (configurable).
 
 - **React App**:
-  - User Interface
+  - **User Interface**:
     - User Registration & Login Form
     - User List (admin only)
     - User Profile (current user only)
-  - State Management
+    - Admin Actions:
+      - Update user information
+      - Delete users
+  - **State Management**:
     - Redux Toolkit (RTK)
-  - Responsive Design
+  - **Responsive Design**:
     - Mobile-first (mobile-friendly) design
     - Responsive UI layouts
 
