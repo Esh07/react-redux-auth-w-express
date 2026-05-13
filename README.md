@@ -1,6 +1,22 @@
-# Welcome to RESTful-express-react
+<div align="center">
 
-This web application consists of a RESTful API (Express) and a React app.  The front-end is built using React.js, incorporating Redux Toolkit (RTK) and other tools.
+# 🔐 React Redux Auth + Express
+
+**Full-stack authentication app with role-based user management**
+
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Redux Toolkit](https://img.shields.io/badge/Redux_Toolkit-764ABC?logo=redux&logoColor=white)](https://redux-toolkit.js.org)
+[![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)](https://expressjs.com)
+[![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org)
+
+</div>
+
+---
+
+## Overview
+
+A full-stack authentication system demonstrating JWT-based auth with HTTP-only cookies, refresh token rotation, admin-only user management, and a responsive React/TypeScript frontend.
 
 ## Table of Contents
 
